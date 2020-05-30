@@ -1,20 +1,20 @@
 import numpy as num
 
-def bias_add(instances, useBias):
-	if useBias:
-		amountOfInstances = instances.shape[0]
-		bias = -num.ones( (amountOfInstances,1) )
-		return num.concatenate( ( instances, bias ), axis=1)
-	else:
-		return instances
-
-def bias_sub(instances, useBias):
-	if useBias:
-		return instances[:,:-1]
-	else:
-		return instances
-
 class MultiPerceptron():
+
+	def _addBias(self, instances):
+		if self._useBias:
+			amountOfInstances = instances.shape[0]
+			bias = -num.ones( (amountOfInstances,1) )
+			return num.concatenate( ( instances, bias ), axis=1)
+		else:
+			return instances
+
+	def _subBias(self, instances):
+		if self._useBias:
+			return instances[:,:-1]
+		else:
+			return instances
 
 	def __init__(self, activation, weightsInitializer, useBias=True):
 		self._activation = activation
@@ -43,11 +43,11 @@ class MultiPerceptron():
 	def propagateForward(self, input):
 		for i in range(len(self._layerOutputs)):
 			if i == 0:
-				Yi = bias_add( input, self._useBias )
+				Yi = self._addBias( input  )
 
 			elif i < len(self._layerOutputs)-1:
 				preActivation = num.dot( self._layerOutputs[i-1], self._weights[i-1] )
-				Yi = bias_add( self._activation( preActivation ), self._useBias )
+				Yi = self._addBias( self._activation( preActivation ) )
 
 			else:
 				preActivation = num.dot( self._layerOutputs[i-1], self._weights[i-1] )
@@ -71,7 +71,7 @@ class MultiPerceptron():
 				Di = Ei*dY
 			else:
 				Ei = num.dot( Ds[i+2], self._weights[i+1].T )
-				Di = bias_sub( Ei*dY, self._useBias )
+				Di = self._subBias( Ei*dY )
 
 			dWs[i] = lr * num.dot( self._layerOutputs[i].T, Di )
 			Ds[i+1] = Di
