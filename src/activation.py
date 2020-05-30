@@ -18,7 +18,7 @@ class ActivationFunction():
 
 class Sigmoid(ActivationFunction):
 	def __call__(self, X):
-		return 1 / (1 + num.exp(-X)) 
+		return 1 / (1 + num.exp(-X))
 
 	def description(self):
 		return 'Sigmoid'
@@ -29,7 +29,7 @@ class Sigmoid(ActivationFunction):
 
 class Tanh(ActivationFunction):
 	def __call__(self, X):
-		return num.tanh(X) 
+		return num.tanh(X)
 
 	def description(self):
 		return 'Tanh'
@@ -40,7 +40,7 @@ class Tanh(ActivationFunction):
 
 class Sign(ActivationFunction):
 	def __call__(self, X):
-		return num.sign(X) 
+		return num.sign(X)
 
 	def description(self):
 		return 'Sign'

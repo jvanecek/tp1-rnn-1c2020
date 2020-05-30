@@ -20,7 +20,7 @@ class TestSigmoid(unittest.TestCase):
 
 		vector = num.array([1,2,3])
 		num.testing.assert_array_equal(sigmoid(vector), 1 / (1 + num.exp(-vector)))
-	
+
 	def test_evaluateDerivativeOnNumbers(self):
 		sigmoid = Sigmoid()
 
@@ -51,7 +51,7 @@ class TestTanh(unittest.TestCase):
 
 		vector = num.array([1,2,3])
 		num.testing.assert_array_equal(tanh(vector), num.tanh(vector))
-	
+
 	def test_evaluateDerivativeOnNumbers(self):
 		tanh = Tanh()
 
@@ -86,7 +86,7 @@ class TestSign(unittest.TestCase):
 
 		vector = num.array([-13.3,0,3])
 		num.testing.assert_array_equal(sign(vector), num.array([-1,0,1]))
-	
+
 	def test_evaluateDerivativeOnNumbers(self):
 		sign = Sign()
 
