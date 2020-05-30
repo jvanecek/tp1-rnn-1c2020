@@ -35,7 +35,7 @@ class Tanh(ActivationFunction):
 		return 'Tanh'
 
 	def derivative(self, Y):
-		return 1-Y**2
+		return 1-num.square(Y)
 
 
 class Sign(ActivationFunction):
