@@ -20,6 +20,9 @@ class TrainingScenario():
 	def historicalLoss(self):
 		self._subclassResponsibility()
 
+	def lastLoss(self):
+		self._subclassResponsibility()
+
 # En el aprendizaje por lotes (batch/off-line), utilizamos el conjunto de datos entero
 # para calcular las correcciones, y en este caso el orden de los datos es indistinto
 class BatchTraining(TrainingScenario):
@@ -45,6 +48,10 @@ class BatchTraining(TrainingScenario):
 
 	def historicalLoss(self):
 		return self._historicalLoss
+
+	def lastLoss(self):
+		return self._historicalLoss[-1]
+
 
 # En el aprendizaje incremental (incremental/on-line) usamos una instancia por vez,
 #, y aquí recorrer las instancias en un orden aleatorio suele incrementar
@@ -78,6 +85,9 @@ class IncrementalTraining(TrainingScenario):
 
 	def historicalLoss(self):
 		return self._historicalLoss
+
+	def lastLoss(self):
+		return self._historicalLoss[-1]
 
 # Compromiso entra ambas técnicas llama mini-lotes (mini-batch) en donde se eligen al azar porciones
 # relativamente chicas de los datos y se los utiliza para calcular las correcciones a los pesos.
@@ -118,3 +128,6 @@ class MiniBatchTraining(TrainingScenario):
 
 	def historicalLoss(self):
 		return self._historicalLoss
+
+	def lastLoss(self):
+		return self._historicalLoss[-1]
