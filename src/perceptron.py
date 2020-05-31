@@ -26,24 +26,22 @@ class MultiPerceptron():
 	def addLayer(self, inputFeatures, outputUnits):
 		inputPlusBias = inputFeatures+self._useBias
 		Wi = self._weightsInitializer(inputPlusBias, outputUnits)
-		Yi = num.zeros( (1, inputPlusBias) )
 
 		self._weights.append( Wi )
-		self._layerOutputs.append( Yi )
+		self._layerOutputs.append( None )
 
 
 	def configureLayers(self, unitsPerLayer):
 		for i in range(len(unitsPerLayer)-1):
 			self.addLayer( unitsPerLayer[i], unitsPerLayer[i+1] )
 
-		Ylast = num.zeros( (1, unitsPerLayer[-1]) )
-		self._layerOutputs.append( Ylast )
+		self._layerOutputs.append( None )
 
 
 	def propagateForward(self, input):
 		for i in range(len(self._layerOutputs)):
 			if i == 0:
-				Yi = self._addBias( input  )
+				Yi = self._addBias( input )
 
 			elif i < len(self._layerOutputs)-1:
 				preActivation = num.dot( self._layerOutputs[i-1], self._weights[i-1] )
@@ -53,8 +51,9 @@ class MultiPerceptron():
 				preActivation = num.dot( self._layerOutputs[i-1], self._weights[i-1] )
 				Yi = self._activation( preActivation )
 
-			self._layerOutputs[i][:] = Yi
+			self._layerOutputs[i] = Yi
 		return self._layerOutputs[-1]
+
 
 	def propagateBackwards(self, expectedOutput, lr):
 		E = None

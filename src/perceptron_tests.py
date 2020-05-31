@@ -2,6 +2,7 @@ import unittest
 import numpy as num
 from activation import Tanh
 from perceptron import MultiPerceptron
+from perceptron_tools import ZeroInitializer
 
 def bias_add(instances):
 	amountOfInstances = instances.shape[0]
@@ -11,8 +12,7 @@ def bias_add(instances):
 def bias_sub(instances):
 	return instances[:,:-1]
 
-def zeroInitializer(numberOfRows,numberOfColumns):
-	return num.zeros( (numberOfRows,numberOfColumns) )
+zeroInitializer = ZeroInitializer()
 
 class TestMultiPerceptron(unittest.TestCase):
 	tanh = Tanh()
@@ -37,10 +37,9 @@ class TestMultiPerceptron(unittest.TestCase):
 		self.assertEqual( len(model._layerOutputs), 1 )
 
 		self.assertEqual( model._weights[0].shape, (4,2) )
-		self.assertEqual( model._layerOutputs[0].shape, (1,4) )
 
 		self.assertArrayEqual( model._weights[0], num.array( [[0,0], [0,0], [0,0], [0,0]] ) )
-		self.assertArrayEqual( model._layerOutputs[0], [[0,0,0,0]] )
+		self.assertArrayEqual( model._layerOutputs[0], [None] )
 
 		model.addLayer( 2, 1 )
 
@@ -49,13 +48,11 @@ class TestMultiPerceptron(unittest.TestCase):
 
 		self.assertEqual( model._weights[0].shape, (4,2) )
 		self.assertEqual( model._weights[1].shape, (3,1) )
-		self.assertEqual( model._layerOutputs[0].shape, (1,4) )
-		self.assertEqual( model._layerOutputs[1].shape, (1,3) )
 
 		self.assertArrayEqual( model._weights[0], num.array( [[0,0], [0,0], [0,0], [0,0]] ) )
 		self.assertArrayEqual( model._weights[1], num.array( [[0], [0], [0]] ) )
-		self.assertArrayEqual( model._layerOutputs[0], [[0,0,0,0]] )
-		self.assertArrayEqual( model._layerOutputs[1], [[0,0,0]] )
+		self.assertArrayEqual( model._layerOutputs[0], [None] )
+		self.assertArrayEqual( model._layerOutputs[1], [None] )
 
 	def test_addLayersAtOnce(self):
 		model = MultiPerceptron( activation=self.tanh, weightsInitializer=zeroInitializer )
@@ -66,15 +63,12 @@ class TestMultiPerceptron(unittest.TestCase):
 
 		self.assertEqual( model._weights[0].shape, (4,2) )
 		self.assertEqual( model._weights[1].shape, (3,1) )
-		self.assertEqual( model._layerOutputs[0].shape, (1,4) )
-		self.assertEqual( model._layerOutputs[1].shape, (1,3) )
-		self.assertEqual( model._layerOutputs[2].shape, (1,1) )
 
 		self.assertArrayEqual( model._weights[0], num.array( [[0,0], [0,0], [0,0], [0,0]] ) )
 		self.assertArrayEqual( model._weights[1], num.array( [[0], [0], [0]] ) )
-		self.assertArrayEqual( model._layerOutputs[0], [[0,0,0,0]] )
-		self.assertArrayEqual( model._layerOutputs[1], [[0,0,0]] )
-		self.assertArrayEqual( model._layerOutputs[2], [[0]] )
+		self.assertArrayEqual( model._layerOutputs[0], [None] )
+		self.assertArrayEqual( model._layerOutputs[1], [None] )
+		self.assertArrayEqual( model._layerOutputs[2], [None] )
 
 	def test_propagateForward(self):
 		S = [ 3,2,1 ]
