@@ -1,6 +1,22 @@
 import math
 import numpy as num
+import time
 from numpy import linalg as LA
+import logging
+
+class TrainingLogger():
+	def logStart(self, training, model, input):
+		logging.info("Starting {}".format(training.description()))
+		logging.info("Amount of instances: {}".format(input.shape[0]))
+		logging.info("Characteristics of model to train\n{}".format(model.summary()))
+		self._start_time = time.time()
+
+	def logEnd(self, training, lastEpoch):
+		executionTime = time.time()-self._start_time
+		logging.info("Finished {}".format(training.description()))
+		logging.info("Epochs: {}".format(lastEpoch))
+		logging.info("Loss: {}".format(training.lastLoss()))
+		logging.info("Time: {} seconds".format(executionTime))
 
 class TrainingScenario():
 	def _subclassResponsibility(self):
@@ -30,6 +46,9 @@ class BatchTraining(TrainingScenario):
 		return 'Batch/Off-line training'
 
 	def executeOn(self, model, input, target, learningRate, stopCondition):
+		logger = TrainingLogger()
+		logger.logStart(self, model, input)
+
 		X = input
 		Z = target
 		P = input.shape[0]
@@ -45,6 +64,8 @@ class BatchTraining(TrainingScenario):
 			lastError += num.mean( num.sum( num.square( E2 ), axis=1) )
 			self._historicalLoss.append(lastError)
 			epoch += 1
+
+		logger.logEnd(self, epoch)
 
 	def historicalLoss(self):
 		return self._historicalLoss
@@ -65,6 +86,9 @@ class IncrementalTraining(TrainingScenario):
 		return num.sum( instancesNorm )
 
 	def executeOn(self, model, input, target, learningRate, stopCondition):
+		logger = TrainingLogger()
+		logger.logStart(self, model, input)
+
 		epoch = 1
 		lastError=1
 		self._historicalLoss = [lastError]
@@ -83,6 +107,8 @@ class IncrementalTraining(TrainingScenario):
 			epoch += 1
 			self._historicalLoss.append(lastError)
 
+		logger.logEnd(self, epoch)
+
 	def historicalLoss(self):
 		return self._historicalLoss
 
@@ -99,6 +125,9 @@ class MiniBatchTraining(TrainingScenario):
 		return 'Mini-Batch training with size {}'.format(self._batchSize)
 
 	def executeOn(self, model, input, target, learningRate, stopCondition):
+		logger = TrainingLogger()
+		logger.logStart(self, model, input)
+
 		x = input
 		z = target
 		P = input.shape[0]
@@ -125,6 +154,8 @@ class MiniBatchTraining(TrainingScenario):
 
 			self._historicalLoss.append(lastError)
 			epoch += 1
+
+		logger.logEnd(self, epoch)
 
 	def historicalLoss(self):
 		return self._historicalLoss
