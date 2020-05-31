@@ -1,4 +1,6 @@
 import numpy as num
+from perceptron_tools import RandomInitializer
+from activation import ActivationParser
 
 class MultiPerceptron():
 
@@ -79,3 +81,31 @@ class MultiPerceptron():
 			self._weights[i] += dWs[i]
 
 		return E
+
+	def summary(self):
+		summary = ''
+		summary += 'Activation: {}\n'.format(self._activation.description())
+		summary += 'With Bias: {}\n'.format(self._useBias)
+		summary += 'Layers: {}\n'.format(len(self._weights))
+
+		shapes = [w.shape for w in self._weights]
+		summary += 'Weights: {}\n'.format( shapes )
+		params = num.sum( [ w[0]*w[1] for w in shapes ] )
+		summary += 'Trainable params: {}'.format(params)
+
+		return summary
+
+class MultiPerceptronParser():
+	def parse(self, paramsDict, inputFeatures):
+		outputUnits = 1
+		activation = ActivationParser().parse( paramsDict['activation'] )
+		mean = float(paramsDict['weightMean'])
+		stdv = float(paramsDict['weightStdv'])
+
+		hideLayersUnits = [int(unit) for unit in paramsDict['hideLayersUnits'].split(',')]
+		unitsPerLayer = [inputFeatures]+hideLayersUnits+[outputUnits]
+
+		model = MultiPerceptron( activation=activation, weightsInitializer=RandomInitializer(mean, stdv) )
+		model.configureLayers( unitsPerLayer )
+
+		return model

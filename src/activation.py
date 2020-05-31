@@ -47,3 +47,12 @@ class Sign(ActivationFunction):
 
 	def derivative(self, Y):
 		return 0
+
+
+class ActivationParser():
+	def parse(self, activationName):
+		if( activationName == 'Tanh' ): return Tanh()
+		if( activationName == 'Sign' ): return Sign()
+		if( activationName == 'Sigmoid'): return Sigmoid()
+
+		raise Exception('No activation named {}'.format(activationName))

@@ -4,7 +4,7 @@ from activation import Tanh, Sigmoid
 from perceptron import MultiPerceptron
 from perceptron_tools import ZeroInitializer
 from training_tools import AfterNumberOfTrainings, WhenReachMinimum
-from training_scenario import BatchTraining, MiniBatchTraining, IncrementalTraining
+from training_scenario import BatchTraining, MiniBatchTraining, IncrementalTraining, TrainingParser
 
 class TestTrainingBehavior(unittest.TestCase):
 
@@ -166,6 +166,22 @@ class TestIncrementalTraining(TestTrainingBehavior):
 		self.assertTrue(\
 			len(training.historicalLoss()) == 100 or\
 			training.lastLoss() < 0.3 )
+
+class TestTrainingParser(unittest.TestCase):
+	def test_parseIncremental(self):
+		params = {'trainingType' : 'Incremental'}
+		training = TrainingParser().parse(params)
+		self.assertEqual( training.description(), 'Incremental training' )
+
+	def test_parseBatch(self):
+		params = {'trainingType' : 'Batch'}
+		training = TrainingParser().parse(params)
+		self.assertEqual( training.description(), 'Batch/Off-line training' )
+
+	def test_parseMiniBatch(self):
+		params = {'trainingType' : 'MiniBatch', 'batchSize' : '30'}
+		training = TrainingParser().parse(params)
+		self.assertEqual( training.description(), 'Mini-Batch training with size 30' )
 
 if __name__ == '__main__':
 	unittest.main()

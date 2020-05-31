@@ -131,3 +131,15 @@ class MiniBatchTraining(TrainingScenario):
 
 	def lastLoss(self):
 		return self._historicalLoss[-1]
+
+
+class TrainingParser():
+	def parse(self, paramsDict):
+		if paramsDict['trainingType'] == 'Incremental':
+			return IncrementalTraining()
+		elif paramsDict['trainingType'] == 'Batch':
+			return BatchTraining()
+		elif paramsDict['trainingType'] == 'MiniBatch':
+			return MiniBatchTraining(batchSize=int(paramsDict['batchSize']))
+		else:
+			raise Exception('Training type {} not known'.format(paramsDict['trainingType']))

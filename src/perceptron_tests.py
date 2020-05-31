@@ -1,7 +1,7 @@
 import unittest
 import numpy as num
 from activation import Tanh
-from perceptron import MultiPerceptron
+from perceptron import MultiPerceptron, MultiPerceptronParser
 from perceptron_tools import ZeroInitializer
 
 def bias_add(instances):
@@ -141,6 +141,37 @@ class TestMultiPerceptron(unittest.TestCase):
 		self.assertArrayEqual( model._layerOutputs[2], Y2 )
 		self.assertArrayEqual( model._weights[0], W1 )
 		self.assertArrayEqual( model._weights[1], W2 )
+
+	def test_summary(self):
+		model = MultiPerceptron( activation=self.tanh, weightsInitializer=zeroInitializer )
+		model.configureLayers( [2,3,1] )
+
+		expectedSummary = """Activation: Tanh
+With Bias: True
+Layers: 2
+Weights: [(3, 3), (4, 1)]
+Trainable params: 13"""
+
+		self.assertEqual( model.summary(), expectedSummary )
+
+class TestMultiPerceptronParser(unittest.TestCase):
+	def test_parseWithBias(self):
+		parser = MultiPerceptronParser()
+		params = {
+			'activation' : 'Tanh',
+			'weightMean' : '0',
+			'weightStdv' : '0.5',
+			'hideLayersUnits' : '2,1'
+		}
+
+		model = parser.parse(params, 10)
+		expectedSummary = """Activation: Tanh
+With Bias: True
+Layers: 3
+Weights: [(11, 2), (3, 1), (2, 1)]
+Trainable params: 27"""
+
+		self.assertEqual( model.summary(), expectedSummary )
 
 if __name__ == '__main__':
 	unittest.main()
