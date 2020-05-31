@@ -10,8 +10,8 @@ class ZeroInitializer():
 
 class RandomInitializer():
 	def __init__(self, mean=0, stdv=1):
-		self._mean = 0
-		self._stdv = 1
+		self._mean = mean
+		self._stdv = stdv
 
 	def __call__(self, numberOfRows,numberOfColumns):
 		return num.random.normal( self._mean, self._stdv, (numberOfRows,numberOfColumns) )
