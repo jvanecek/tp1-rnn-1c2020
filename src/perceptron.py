@@ -102,7 +102,7 @@ class MultiPerceptronParser():
 		mean = float(paramsDict['weightMean'])
 		stdv = float(paramsDict['weightStdv'])
 
-		hideLayersUnits = [int(unit) for unit in paramsDict['hideLayersUnits'].split(',')]
+		hideLayersUnits = [int(unit) for unit in paramsDict['hiddenLayersUnits'].split(',')]
 		unitsPerLayer = [inputFeatures]+hideLayersUnits+[outputUnits]
 
 		model = MultiPerceptron( activation=activation, weightsInitializer=RandomInitializer(mean, stdv) )

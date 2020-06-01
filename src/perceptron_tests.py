@@ -161,7 +161,7 @@ class TestMultiPerceptronParser(unittest.TestCase):
 			'activation' : 'Tanh',
 			'weightMean' : '0',
 			'weightStdv' : '0.5',
-			'hideLayersUnits' : '2,1'
+			'hiddenLayersUnits' : '2,1'
 		}
 
 		model = parser.parse(params, 10)
