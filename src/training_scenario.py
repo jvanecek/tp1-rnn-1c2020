@@ -4,19 +4,24 @@ import time
 from numpy import linalg as LA
 import logging
 
+def meanSquared(estimation):
+	return num.mean( num.sum( num.square( estimation ), axis=1) )
+
 class TrainingLogger():
 	def logStart(self, training, model, input):
-		logging.info("Starting {}".format(training.description()))
-		logging.info("Amount of instances: {}".format(input.shape[0]))
-		logging.info("Characteristics of model to train\n{}".format(model.summary()))
+		log = "Starting {}\n".format(training.description())
+		log += "> Amount of instances: {}\n".format(input.shape[0])
+		log += "> Characteristics of model to train\n{}".format(model.summary())
+		logging.info(log)
 		self._start_time = time.time()
 
 	def logEnd(self, training, lastEpoch):
 		executionTime = time.time()-self._start_time
-		logging.info("Finished {}".format(training.description()))
-		logging.info("Epochs: {}".format(lastEpoch))
-		logging.info("Loss: {}".format(training.lastLoss()))
-		logging.info("Time: {} seconds".format(executionTime))
+		log = "Finished {}\n".format(training.description())
+		log += "> Epochs: {}\n".format(lastEpoch)
+		log += "> Loss: {}\n".format(training.lastLoss())
+		log += "> Time: {} seconds".format(executionTime)
+		logging.info(log)
 
 class TrainingScenario():
 	def _subclassResponsibility(self):
@@ -56,12 +61,11 @@ class BatchTraining(TrainingScenario):
 		lastError=1
 		self._historicalLoss = [lastError]
 		while not stopCondition(lastError, epoch):
-			lastError=0
 
 			model.propagateForward( X )
 			E2 = model.propagateBackwards( Z, learningRate )
+			lastError = meanSquared( E2 )
 
-			lastError += num.mean( num.sum( num.square( E2 ), axis=1) )
 			self._historicalLoss.append(lastError)
 			epoch += 1
 
@@ -81,10 +85,6 @@ class IncrementalTraining(TrainingScenario):
 	def description(self):
 		return 'Incremental training'
 
-	def _norm2sum(self, estimation):
-		instancesNorm = [ num.square( LA.norm( instanceError ) ) for instanceError in estimation ]
-		return num.sum( instancesNorm )
-
 	def executeOn(self, model, input, target, learningRate, stopCondition):
 		logger = TrainingLogger()
 		logger.logStart(self, model, input)
@@ -101,7 +101,7 @@ class IncrementalTraining(TrainingScenario):
 
 				model.propagateForward( X_h )
 				E_h = model.propagateBackwards(Z_h, learningRate)
-				lastError += self._norm2sum( E_h )
+				lastError += meanSquared(E_h)
 
 			lastError /= P
 			epoch += 1
@@ -147,10 +147,7 @@ class MiniBatchTraining(TrainingScenario):
 
 				model.propagateForward( Xh )
 				E2 = model.propagateBackwards( Zh, learningRate )
-
-				# La expresión general del error es el promedio por lote de la suma de las
-				# diferencias cuadradas entre la respuesta deseada y la obtenida para todas las unidades de salida.
-				lastError += num.mean( num.sum( num.square( E2 ), axis=1) )
+				lastError += meanSquared(E2)
 
 			self._historicalLoss.append(lastError)
 			epoch += 1

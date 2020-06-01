@@ -12,7 +12,7 @@ def run_training(configurationFilePath, loglevel):
 	conf.read(configurationFilePath)
 
 	logging.basicConfig(
-		filename=('{}.log'.format(configurationFilePath)),
+		filename=('{}.log'.format(configurationFilePath[:-4])),
 		filemode='w',
 		level=getattr(logging, loglevel.upper(), None),
 		format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
