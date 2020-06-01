@@ -41,7 +41,7 @@ def run_training(configurationFilePath, loglevel):
 	training.executeOn(
 		model=model,
 		input=trainingSet.to_numpy(),
-		target=targetSet.to_numpy(),
+		target=targetSet.to_numpy().reshape(targetSet.shape[0],1),
 		learningRate=learningRate,
 		stopCondition=stopCondition)
 
