@@ -1,11 +1,13 @@
 import argparse
-import pandas as pd
 import logging
-from configparser import ConfigParser
+import matplotlib.pyplot as plt
+import pandas as pd
 from activation import ActivationParser
+from configparser import ConfigParser
 from perceptron import MultiPerceptronParser
 from training_scenario import TrainingParser
 from training_tools import StopConditionParser
+
 
 def run_training(configurationFilePath, loglevel):
 	conf = ConfigParser()
@@ -44,6 +46,12 @@ def run_training(configurationFilePath, loglevel):
 		target=targetSet.to_numpy().reshape(targetSet.shape[0],1),
 		learningRate=learningRate,
 		stopCondition=stopCondition)
+
+	plt.plot(training.historicalLoss())
+	plt.xlabel('Epoch')
+	plt.ylabel('Loss')
+	plt.show()
+	plt.savefig('{}.png'.format(configurationFilePath[:-4]))
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Train a neural network')
