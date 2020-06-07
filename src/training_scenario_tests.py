@@ -62,6 +62,39 @@ class TestTrainingBehavior(unittest.TestCase):
 
 		return model
 
+	def trainAndEvaluateAgainstValidationSet(self, training, stopCondition):
+		logicStatements = num.array( [
+			[ 0, 0, 0 ],
+			[ 0, 1, 1 ],
+			[ 1, 0, 0 ]])
+		expectedOutput = num.array( [
+			[ 0 ],
+			[ 0 ],
+			[ 1 ]])
+
+		validationSet = num.array( [
+			[ 1, 1, 1 ],
+			[ 1, 0, 1 ]])
+		validationTarget = num.array( [
+			[ 1 ],
+			[ 0 ]])
+
+		S = [ logicStatements.shape[1], 3, 2, expectedOutput.shape[1] ]
+
+		model = MultiPerceptron( activation=Sigmoid(), weightsInitializer=ZeroInitializer() )
+		model.configureLayers( S )
+
+		training.executeOn(
+			model=model,
+			input=logicStatements,
+			target=expectedOutput,
+			learningRate=0.1,
+			stopCondition=stopCondition,
+			validationSet=validationSet,
+			validationTarget=validationTarget)
+
+		return model
+
 class TestBatchTraining(TestTrainingBehavior):
 	def test_description(self):
 		training = BatchTraining()
@@ -90,6 +123,11 @@ class TestBatchTraining(TestTrainingBehavior):
 		self.assertEqual( len(training.historicalLoss()), 2)
 		self.assertTrue( training.lastLoss() < 0.3 )
 
+	def test_training_and_evaluate(self):
+		training = BatchTraining()
+		self.trainAndEvaluateAgainstValidationSet( training, AfterNumberOfTrainings(35) )
+		self.assertEqual( len(training.historicalLoss()), 35)
+		self.assertTrue( training.lastLoss() < 0.25 )
 
 class TestMiniBatchTraining(TestTrainingBehavior):
 	def test_description(self):
@@ -135,6 +173,10 @@ class TestMiniBatchTraining(TestTrainingBehavior):
 			len(training.historicalLoss()) == 100 or\
 			training.lastLoss() < 0.3 )
 
+	def test_training_and_evaluate(self):
+		training = MiniBatchTraining(batchSize=2)
+		self.trainAndEvaluateAgainstValidationSet( training, AfterNumberOfTrainings(35) )
+		self.assertEqual( len(training.historicalLoss()), 35)
 
 class TestIncrementalTraining(TestTrainingBehavior):
 	def test_description(self):
@@ -166,6 +208,11 @@ class TestIncrementalTraining(TestTrainingBehavior):
 		self.assertTrue(\
 			len(training.historicalLoss()) == 100 or\
 			training.lastLoss() < 0.3 )
+
+	def test_training_and_evaluate(self):
+		training = IncrementalTraining()
+		self.trainAndEvaluateAgainstValidationSet( training, AfterNumberOfTrainings(35) )
+		self.assertEqual( len(training.historicalLoss()), 35)
 
 class TestTrainingParser(unittest.TestCase):
 	def test_parseIncremental(self):

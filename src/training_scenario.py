@@ -8,19 +8,23 @@ def meanSquared(estimation):
 	return num.mean( num.sum( num.square( estimation ), axis=1) )
 
 class TrainingLogger():
-	def logStart(self, training, model, input):
+	def logStart(self, training, model, input, validationSet):
 		log = "Starting {}\n".format(training.description())
-		log += "> Amount of instances: {}\n".format(input.shape[0])
+		log += "> Training instances: {}\n".format(input.shape[0])
+		if validationSet is not None:
+			log += "> Validation instances: {}\n".format(validationSet.shape[0])
 		log += "> Characteristics of model to train\n{}".format(model.summary())
 		logging.info(log)
 		self._start_time = time.time()
 
-	def logEnd(self, training, lastEpoch):
+	def logEnd(self, training, lastEpoch, validationLoss):
 		executionTime = time.time()-self._start_time
 		log = "Finished {}\n".format(training.description())
 		log += "> Epochs: {}\n".format(lastEpoch)
-		log += "> Loss: {}\n".format(training.lastLoss())
-		log += "> Time: {} seconds".format(executionTime)
+		log += "> Training Loss: {:.4f}\n".format(training.lastLoss())
+		if validationLoss is not None:
+			log += "> Validation Loss: {:.4f}\n".format(validationLoss)
+		log += "> Time: {:.4f} seconds".format(executionTime)
 		logging.info(log)
 
 class TrainingScenario():
@@ -35,7 +39,9 @@ class TrainingScenario():
 			input,
 			target,
 			learningRate,
-			stopCondition):
+			stopCondition,
+			validationSet=None,
+			validationTarget=None):
 		self._subclassResponsibility()
 
 	def historicalLoss(self):
@@ -44,15 +50,27 @@ class TrainingScenario():
 	def lastLoss(self):
 		self._subclassResponsibility()
 
+	def _fit(self, model, input, target, learningRate):
+		model.propagateForward( input )
+		estimation = model.propagateBackwards( target, learningRate )
+		return meanSquared( estimation )
+
+	def _evaluate(self, model, input, target, learningRate):
+		if input is not None:
+			model.propagateForward( input )
+			estimation = model.propagateBackwards( target, learningRate, updateWeights=True )
+			return meanSquared( estimation )
+		return None
+
 # En el aprendizaje por lotes (batch/off-line), utilizamos el conjunto de datos entero
 # para calcular las correcciones, y en este caso el orden de los datos es indistinto
 class BatchTraining(TrainingScenario):
 	def description(self):
 		return 'Batch/Off-line training'
 
-	def executeOn(self, model, input, target, learningRate, stopCondition):
+	def executeOn(self, model, input, target, learningRate, stopCondition, validationSet=None, validationTarget=None):
 		logger = TrainingLogger()
-		logger.logStart(self, model, input)
+		logger.logStart(self, model, input, validationSet)
 
 		X = input
 		Z = target
@@ -62,14 +80,13 @@ class BatchTraining(TrainingScenario):
 		self._historicalLoss = [lastError]
 		while not stopCondition(lastError, epoch):
 
-			model.propagateForward( X )
-			E2 = model.propagateBackwards( Z, learningRate )
-			lastError = meanSquared( E2 )
+			lastError = super()._fit(model, X, Z, learningRate)
 
 			self._historicalLoss.append(lastError)
 			epoch += 1
 
-		logger.logEnd(self, epoch)
+		validationLoss = super()._evaluate(model, validationSet, validationTarget, learningRate)
+		logger.logEnd(self, epoch, validationLoss)
 
 	def historicalLoss(self):
 		return self._historicalLoss
@@ -85,9 +102,9 @@ class IncrementalTraining(TrainingScenario):
 	def description(self):
 		return 'Incremental training'
 
-	def executeOn(self, model, input, target, learningRate, stopCondition):
+	def executeOn(self, model, input, target, learningRate, stopCondition, validationSet=None, validationTarget=None):
 		logger = TrainingLogger()
-		logger.logStart(self, model, input)
+		logger.logStart(self, model, input, validationSet)
 
 		epoch = 1
 		lastError=1
@@ -99,15 +116,14 @@ class IncrementalTraining(TrainingScenario):
 				X_h = num.array([input[h]]) # Solo es un vector. Tiene que ser una matriz para poder transponerse en la correccion
 				Z_h = target[h]
 
-				model.propagateForward( X_h )
-				E_h = model.propagateBackwards(Z_h, learningRate)
-				lastError += meanSquared(E_h)
+				lastError += super()._fit(model, X_h, Z_h, learningRate)
 
 			lastError /= P
 			epoch += 1
 			self._historicalLoss.append(lastError)
 
-		logger.logEnd(self, epoch)
+		validationLoss = super()._evaluate(model, validationSet, validationTarget, learningRate)
+		logger.logEnd(self, epoch, validationLoss)
 
 	def historicalLoss(self):
 		return self._historicalLoss
@@ -115,7 +131,7 @@ class IncrementalTraining(TrainingScenario):
 	def lastLoss(self):
 		return self._historicalLoss[-1]
 
-# Compromiso entra ambas técnicas llama mini-lotes (mini-batch) en donde se eligen al azar porciones
+# Compromiso entra ambas técnicas llamada mini-lotes (mini-batch) en donde se eligen al azar porciones
 # relativamente chicas de los datos y se los utiliza para calcular las correcciones a los pesos.
 class MiniBatchTraining(TrainingScenario):
 	def __init__(self, batchSize):
@@ -124,9 +140,9 @@ class MiniBatchTraining(TrainingScenario):
 	def description(self):
 		return 'Mini-Batch training with size {}'.format(self._batchSize)
 
-	def executeOn(self, model, input, target, learningRate, stopCondition):
+	def executeOn(self, model, input, target, learningRate, stopCondition, validationSet=None, validationTarget=None):
 		logger = TrainingLogger()
-		logger.logStart(self, model, input)
+		logger.logStart(self, model, input, validationSet)
 
 		x = input
 		z = target
@@ -145,14 +161,13 @@ class MiniBatchTraining(TrainingScenario):
 				Xh = x[h:h+B]
 				Zh = z[h:h+B]
 
-				model.propagateForward( Xh )
-				E2 = model.propagateBackwards( Zh, learningRate )
-				lastError += meanSquared(E2)
+				lastError += super()._fit(model, Xh, Zh, learningRate)
 
 			self._historicalLoss.append(lastError)
 			epoch += 1
 
-		logger.logEnd(self, epoch)
+		validationLoss = super()._evaluate(model, validationSet, validationTarget, learningRate)
+		logger.logEnd(self, epoch, validationLoss)
 
 	def historicalLoss(self):
 		return self._historicalLoss

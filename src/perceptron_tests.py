@@ -142,6 +142,41 @@ class TestMultiPerceptron(unittest.TestCase):
 		self.assertArrayEqual( model._weights[0], W1 )
 		self.assertArrayEqual( model._weights[1], W2 )
 
+	def test_propagateBackwardsWithoutUpdatingWeights(self):
+		S = [ 3,2,1 ]
+		Xh = num.array([[1,0,1]])
+		Zh = num.array([[1]])
+		lr = 0.1
+
+		model = MultiPerceptron( activation=self.tanh, weightsInitializer=zeroInitializer )
+		model.configureLayers( S )
+		model.propagateForward( Xh )
+
+		W1 = zeroInitializer(S[0]+1, S[1])
+		W2 = zeroInitializer(S[1]+1, S[2])
+
+		self.assertArrayEqual( model._weights[0], W1 )
+		self.assertArrayEqual( model._weights[1], W2 )
+
+		E = model.propagateBackwards( Zh, lr, updateWeights=False )
+
+		Y0 = num.zeros( (1,S[0]+1) )
+		Y1 = num.zeros( (1,S[1]+1) )
+		Y2 = num.zeros( (1,S[2]) )
+
+		Y0[:] = bias_add( Xh )
+		Y1[:] = bias_add( num.tanh( num.dot( Y0, W1)) )
+		Y2[:] = num.tanh( num.dot( Y1, W2))
+
+		E2 = Zh-Y2
+
+		self.assertArrayEqual( E, E2 )
+		self.assertArrayEqual( model._layerOutputs[0], Y0 )
+		self.assertArrayEqual( model._layerOutputs[1], Y1 )
+		self.assertArrayEqual( model._layerOutputs[2], Y2 )
+		self.assertArrayEqual( model._weights[0], W1 )
+		self.assertArrayEqual( model._weights[1], W2 )
+
 	def test_summary(self):
 		model = MultiPerceptron( activation=self.tanh, weightsInitializer=zeroInitializer )
 		model.configureLayers( [2,3,1] )

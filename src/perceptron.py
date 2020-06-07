@@ -57,7 +57,7 @@ class MultiPerceptron():
 		return self._layerOutputs[-1]
 
 
-	def propagateBackwards(self, expectedOutput, learningRate):
+	def propagateBackwards(self, expectedOutput, learningRate, updateWeights=True):
 		E = None
 		dWs = [None]*len(self._weights)
 		Ds = [None]*len(self._layerOutputs)
@@ -77,8 +77,9 @@ class MultiPerceptron():
 			dWs[i] = learningRate * num.dot( self._layerOutputs[i].T, Di )
 			Ds[i+1] = Di
 
-		for i in range(len(self._weights)):
-			self._weights[i] += dWs[i]
+		if updateWeights:
+			for i in range(len(self._weights)):
+				self._weights[i] += dWs[i]
 
 		return E
 
